@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { X, AlertTriangle, Info, CheckCircle2, FileText } from "lucide-react";
+import { X, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+
+type PageKey = "dashboard" | "projects" | "issues" | "patients" | "beds" | "reports" | "staff" | "ai" | "settings";
 
 export type AlertSeverity = "critical" | "warning" | "info";
 export type AlertItem = {
@@ -22,9 +25,14 @@ const seed: AlertItem[] = [
   { id: "a7", severity: "info", title: "Discharge Protocol Update Applied", description: "Version 2.4 now active", clinic: "Northside", time: "6h ago", unread: false },
 ];
 
-type Props = { open: boolean; onClose: () => void; onUnreadChange: (n: number) => void };
+type Props = { open: boolean; onClose: () => void; onUnreadChange: (n: number) => void; onNavigate?: (p: PageKey) => void };
 
-export function AlertsPanel({ open, onClose, onUnreadChange }: Props) {
+const targetFor = (id: string): PageKey => {
+  const map: Record<string, PageKey> = { a1: "beds", a2: "issues", a3: "issues", a4: "reports", a5: "reports", a6: "staff", a7: "projects" };
+  return map[id] ?? "dashboard";
+};
+
+export function AlertsPanel({ open, onClose, onUnreadChange, onNavigate }: Props) {
   const [alerts, setAlerts] = useState(seed);
   const [filter, setFilter] = useState<"all" | "critical" | "warning" | "info">("all");
 
@@ -38,7 +46,7 @@ export function AlertsPanel({ open, onClose, onUnreadChange }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const markAllRead = () => setAlerts(alerts.map(a => ({ ...a, unread: false })));
+  const markAllRead = () => { setAlerts(alerts.map(a => ({ ...a, unread: false }))); toast.success("All notifications marked as read"); };
   const filtered = alerts.filter(a => filter === "all" || a.severity === filter);
 
   const sevConfig = (s: AlertSeverity) => {
@@ -79,7 +87,14 @@ export function AlertsPanel({ open, onClose, onUnreadChange }: Props) {
           ) : filtered.map(a => {
             const { color, Icon } = sevConfig(a.severity);
             return (
-              <div key={a.id} className="p-3 border-b border-[var(--wl-border)] hover:bg-[var(--wl-card)] cursor-pointer flex gap-3">
+              <div
+                key={a.id}
+                onClick={() => {
+                  setAlerts(prev => prev.map(x => x.id === a.id ? { ...x, unread: false } : x));
+                  onNavigate?.(targetFor(a.id));
+                }}
+                className="p-3 border-b border-[var(--wl-border)] hover:bg-[var(--wl-card)] cursor-pointer flex gap-3"
+              >
                 <div className="w-7 h-7 shrink-0 rounded flex items-center justify-center" style={{ background: `${color}22`, color }}>
                   <Icon size={13} />
                 </div>

@@ -1,26 +1,29 @@
-import { LayoutDashboard, FolderKanban, AlertCircle, Users, BedDouble, BarChart3, UserCog, Sparkles, Settings, ChevronsLeft, ChevronsRight, Activity } from "lucide-react";
+import { LayoutDashboard, FolderKanban, AlertCircle, Users, BedDouble, BarChart3, UserCog, Sparkles, Settings, ChevronsLeft, ChevronsRight, Activity, Shield, Briefcase } from "lucide-react";
 
 export type PageKey = "dashboard" | "projects" | "issues" | "patients" | "beds" | "reports" | "staff" | "ai" | "settings";
 
-const sections: { title: string; items: { key: PageKey; label: string; icon: any; badge?: { text: string; tone: "red" | "yellow" } }[] }[] = [
-  { title: "Overview", items: [
-    { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { key: "projects", label: "Projects", icon: FolderKanban },
-    { key: "issues", label: "Issues", icon: AlertCircle, badge: { text: "3", tone: "red" } },
-  ]},
-  { title: "Clinical", items: [
-    { key: "patients", label: "Patients", icon: Users, badge: { text: "142", tone: "yellow" } },
-    { key: "beds", label: "Bed Occupancy", icon: BedDouble },
-  ]},
-  { title: "Analytics", items: [
-    { key: "reports", label: "Reports", icon: BarChart3 },
-    { key: "staff", label: "Staff", icon: UserCog },
-    { key: "ai", label: "AI Insights", icon: Sparkles },
-  ]},
-  { title: "System", items: [
-    { key: "settings", label: "Settings", icon: Settings },
-  ]},
-];
+type NavItem = { key: PageKey; label: string; icon: any; badge?: { text: string; tone: "red" | "yellow" } };
+type Section = { title: string; items: NavItem[] };
+
+function getSections(role: "ops" | "qa"): Section[] {
+  const issuesBadge = role === "qa" ? { text: "2 Critical", tone: "red" as const } : { text: "3", tone: "red" as const };
+  const clinical: NavItem[] = [{ key: "patients", label: "Patients", icon: Users, badge: { text: "142", tone: "yellow" as const } }];
+  if (role === "ops") clinical.push({ key: "beds", label: "Bed Occupancy", icon: BedDouble });
+  return [
+    { title: "Overview", items: [
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "projects", label: "Projects", icon: FolderKanban },
+      { key: "issues", label: "Issues", icon: AlertCircle, badge: issuesBadge },
+    ]},
+    { title: "Clinical", items: clinical },
+    { title: "Analytics", items: [
+      { key: "reports", label: "Reports", icon: BarChart3 },
+      { key: "staff", label: "Staff", icon: UserCog },
+      { key: "ai", label: "AI Insights", icon: Sparkles },
+    ]},
+    { title: "System", items: [{ key: "settings", label: "Settings", icon: Settings }] },
+  ];
+}
 
 type Props = {
   collapsed: boolean;
@@ -31,8 +34,13 @@ type Props = {
   onRoleChange: (r: "ops" | "qa") => void;
 };
 
-export function Sidebar({ collapsed, onToggle, page, onNavigate, role, onRoleChange }: Props) {
+export function Sidebar({ collapsed, onToggle, page, onNavigate, role }: Props) {
+  const sections = getSections(role);
   const initials = role === "ops" ? "SM" : "JK";
+  const roleLabel = role === "ops" ? "Ops Manager" : "QA Lead";
+  const roleColor = role === "ops" ? "var(--wl-blue)" : "var(--wl-purple)";
+  const RoleIcon = role === "ops" ? Briefcase : Shield;
+
   return (
     <aside
       className="relative h-screen border-r border-[var(--wl-border)] bg-[var(--wl-surface)] flex flex-col transition-all duration-200 shrink-0"
@@ -42,9 +50,7 @@ export function Sidebar({ collapsed, onToggle, page, onNavigate, role, onRoleCha
         <div className="w-6 h-6 rounded bg-[var(--wl-blue)] flex items-center justify-center shrink-0">
           <Activity size={14} color="#fff" />
         </div>
-        {!collapsed && (
-          <span className="text-[var(--wl-text)] font-semibold tracking-tight">Wellora</span>
-        )}
+        {!collapsed && <span className="text-[var(--wl-text)] font-semibold tracking-tight">Wellora</span>}
       </div>
 
       <button
@@ -87,18 +93,19 @@ export function Sidebar({ collapsed, onToggle, page, onNavigate, role, onRoleCha
 
       <div className="border-t border-[var(--wl-border)] p-2">
         {collapsed ? (
-          <div className="w-7 h-7 mx-auto rounded-full bg-[var(--wl-blue)]/20 text-[var(--wl-blue)] flex items-center justify-center text-[11px] font-semibold">{initials}</div>
+          <div className="w-7 h-7 mx-auto rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: `${roleColor}33`, color: roleColor }}>{initials}</div>
         ) : (
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-[var(--wl-blue)]/20 text-[var(--wl-blue)] flex items-center justify-center text-[11px] font-semibold">{initials}</div>
-            <select
-              value={role}
-              onChange={(e) => onRoleChange(e.target.value as any)}
-              className="flex-1 bg-transparent text-xs text-[var(--wl-text)] border border-[var(--wl-border)] rounded px-1.5 py-1 outline-none"
-            >
-              <option value="ops">Ops Manager</option>
-              <option value="qa">QA Lead</option>
-            </select>
+          <div
+            className="flex items-center gap-2 px-2 py-1.5 rounded border"
+            style={{ borderColor: `${roleColor}55`, background: `${roleColor}11` }}
+          >
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold" style={{ background: `${roleColor}33`, color: roleColor }}>{initials}</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[var(--wl-text)] font-semibold truncate">{role === "ops" ? "Sarah Mitchell" : "Dr. James Kim"}</div>
+              <div className="flex items-center gap-1 text-[10px]" style={{ color: roleColor }}>
+                <RoleIcon size={9} />{roleLabel}
+              </div>
+            </div>
           </div>
         )}
       </div>

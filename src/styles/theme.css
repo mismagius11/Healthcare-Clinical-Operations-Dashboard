@@ -179,3 +179,34 @@
     line-height: 1.5;
   }
 }
+
+/* Standardized table styles (wl-table) */
+.wl-table { width: 100%; border-collapse: collapse; }
+.wl-table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--wl-text-2);
+  padding: 0 12px 10px;
+  border-bottom: 1px solid var(--wl-border);
+  text-align: left;
+  white-space: nowrap;
+}
+.wl-table th button {
+  font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit;
+}
+.wl-table td {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--wl-text-2);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--wl-border);
+}
+.wl-table tbody tr:last-child td { border-bottom: none; }
+.wl-table td:first-child {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--wl-text);
+}
+.wl-table tbody tr:hover td { background: var(--wl-surface); }

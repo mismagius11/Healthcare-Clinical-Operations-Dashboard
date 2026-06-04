@@ -12,12 +12,19 @@ type Props = {
   onRoleChange: (r: "ops" | "qa") => void;
   unreadCount: number;
   onOpenAlerts: () => void;
+  onOpenHelp: () => void;
+  onOpenSearch?: () => void;
+  onOpenShortcuts?: () => void;
+  onSignOut?: () => void;
   onNavigateProfile: () => void;
+  onNavigateAccount?: () => void;
+  onNavigateNotifications?: () => void;
 };
 
-export function Header({ pageLabel, theme, onToggleTheme, initials, name, role, onRoleChange, unreadCount, onOpenAlerts, onNavigateProfile }: Props) {
+export function Header({ pageLabel, theme, onToggleTheme, initials, name, role, onRoleChange, unreadCount, onOpenAlerts, onOpenHelp, onOpenSearch, onOpenShortcuts, onSignOut, onNavigateProfile, onNavigateAccount, onNavigateNotifications }: Props) {
   const [profileOpen, setProfileOpen] = useState(false);
   const roleLabel = role === "ops" ? "Ops Manager" : "QA Lead";
+  const roleColor = role === "ops" ? "var(--wl-blue)" : "var(--wl-purple)";
 
   return (
     <header className="h-12 border-b border-[var(--wl-border)] bg-[var(--wl-surface)] flex items-center px-4 gap-3 shrink-0 relative">
@@ -30,10 +37,13 @@ export function Header({ pageLabel, theme, onToggleTheme, initials, name, role, 
       <div className="ml-auto flex items-center gap-2 relative">
         <div className="relative">
           <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--wl-text-2)]" />
-          <input
-            placeholder="Search…"
-            className="h-7 w-64 pl-7 pr-12 bg-[var(--wl-card)] border border-[var(--wl-border)] rounded text-xs text-[var(--wl-text)] outline-none focus:border-[var(--wl-blue)]"
-          />
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            className="h-7 w-64 pl-7 pr-12 bg-[var(--wl-card)] border border-[var(--wl-border)] rounded text-xs text-[var(--wl-text-2)] outline-none hover:border-[var(--wl-text-2)] text-left"
+          >
+            Search…
+          </button>
           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[var(--wl-text-2)] border border-[var(--wl-border)] rounded px-1">⌘K</span>
         </div>
         <button onClick={onToggleTheme} className="w-7 h-7 flex items-center justify-center text-[var(--wl-text-2)] hover:text-[var(--wl-text)] border border-[var(--wl-border)] rounded">
@@ -47,13 +57,14 @@ export function Header({ pageLabel, theme, onToggleTheme, initials, name, role, 
             </span>
           )}
         </button>
-        <button className="w-7 h-7 flex items-center justify-center text-[var(--wl-text-2)] hover:text-[var(--wl-text)] border border-[var(--wl-border)] rounded">
+        <button onClick={onOpenHelp} className="w-7 h-7 flex items-center justify-center text-[var(--wl-text-2)] hover:text-[var(--wl-text)] border border-[var(--wl-border)] rounded">
           <HelpCircle size={13} />
         </button>
         <div className="relative">
           <button
             onClick={() => setProfileOpen(o => !o)}
-            className="w-7 h-7 rounded-full bg-[var(--wl-blue)]/20 text-[var(--wl-blue)] flex items-center justify-center text-[11px] font-semibold hover:ring-2 ring-[var(--wl-blue)]/30"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold hover:ring-2"
+            style={{ background: `${roleColor}33`, color: roleColor }}
           >
             {initials}
           </button>
@@ -66,6 +77,10 @@ export function Header({ pageLabel, theme, onToggleTheme, initials, name, role, 
             role={role}
             onRoleChange={onRoleChange}
             onNavigateProfile={onNavigateProfile}
+            onNavigateAccount={onNavigateAccount}
+            onNavigateNotifications={onNavigateNotifications}
+            onOpenShortcuts={onOpenShortcuts}
+            onSignOut={onSignOut}
           />
         </div>
       </div>

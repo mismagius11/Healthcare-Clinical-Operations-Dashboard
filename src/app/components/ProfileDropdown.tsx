@@ -10,9 +10,13 @@ type Props = {
   role: "ops" | "qa";
   onRoleChange: (r: "ops" | "qa") => void;
   onNavigateProfile: () => void;
+  onNavigateAccount?: () => void;
+  onNavigateNotifications?: () => void;
+  onOpenShortcuts?: () => void;
+  onSignOut?: () => void;
 };
 
-export function ProfileDropdown({ open, onClose, initials, name, roleLabel, role, onRoleChange, onNavigateProfile }: Props) {
+export function ProfileDropdown({ open, onClose, initials, name, roleLabel, role, onRoleChange, onNavigateProfile, onNavigateAccount, onNavigateNotifications, onOpenShortcuts, onSignOut }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +38,8 @@ export function ProfileDropdown({ open, onClose, initials, name, roleLabel, role
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-9 w-64 bg-[var(--wl-card)] border border-[var(--wl-border)] rounded-md shadow-xl z-50 overflow-hidden"
+      className="absolute right-0 top-9 w-64 bg-[var(--wl-card)] border border-[var(--wl-border)] rounded-md shadow-xl overflow-hidden"
+      style={{ zIndex: 9999 }}
     >
       <div className="p-3 flex items-center gap-3 border-b border-[var(--wl-border)]">
         <div className="w-9 h-9 rounded-full bg-[var(--wl-blue)]/20 text-[var(--wl-blue)] flex items-center justify-center text-sm font-semibold">{initials}</div>
@@ -45,9 +50,9 @@ export function ProfileDropdown({ open, onClose, initials, name, roleLabel, role
       </div>
       <div className="py-1">
         <Item icon={User} label="My Profile" onClick={() => { onClose(); onNavigateProfile(); }} />
-        <Item icon={SettingsIcon} label="Account Settings" onClick={() => { onClose(); onNavigateProfile(); }} />
-        <Item icon={Bell} label="Notification Preferences" onClick={() => { onClose(); onNavigateProfile(); }} />
-        <Item icon={Keyboard} label="Keyboard Shortcuts" hint="⌘K" />
+        <Item icon={SettingsIcon} label="Account Settings" onClick={() => { onClose(); (onNavigateAccount ?? onNavigateProfile)(); }} />
+        <Item icon={Bell} label="Notification Preferences" onClick={() => { onClose(); (onNavigateNotifications ?? onNavigateProfile)(); }} />
+        <Item icon={Keyboard} label="Keyboard Shortcuts" hint="⌘K" onClick={() => { onClose(); onOpenShortcuts?.(); }} />
       </div>
       <div className="border-t border-[var(--wl-border)] py-2 px-2">
         <div className="text-[10px] uppercase tracking-wider text-[var(--wl-text-2)] px-2 mb-1 flex items-center gap-1"><UserCog size={11} />Switch role</div>
@@ -64,7 +69,7 @@ export function ProfileDropdown({ open, onClose, initials, name, roleLabel, role
         </div>
       </div>
       <div className="border-t border-[var(--wl-border)] py-1">
-        <Item icon={LogOut} label="Sign Out" danger />
+        <Item icon={LogOut} label="Sign Out" danger onClick={() => { onClose(); onSignOut?.(); }} />
       </div>
     </div>
   );
