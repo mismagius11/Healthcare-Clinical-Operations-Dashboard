@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { X, CheckCircle2, Circle, Clock } from "lucide-react";
 import { Badge } from "./ui-bits";
 import { issues } from "./data";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
+import { toast } from "sonner";
 
 export type ProjectDetail = {
   name: string; status: string; risk: string; owner: string; clinic: string; updated: string;
@@ -116,64 +118,107 @@ function riskTone(r: string) {
   return r === "High" ? "red" : r === "Medium" ? "yellow" : "green";
 }
 
+type EditFields = { clinic: string; owner: string; dept: string; start: string; target: string; alos: string; objectives: string };
+
+const tabListCls = "mt-4 inline-flex h-9 w-fit items-center rounded-md p-1 bg-[var(--wl-surface)] border border-[var(--wl-border)]";
+const tabTriggerCls = "inline-flex items-center justify-center px-3 h-7 rounded text-xs font-medium transition-colors text-[var(--wl-text-2)] data-[state=active]:bg-[var(--wl-blue)] data-[state=active]:text-white hover:text-[var(--wl-text)] data-[state=active]:hover:text-white";
+
 export function ProjectDetailModal({ project, onClose }: { project: any | null; onClose: () => void }) {
   const [tab, setTab] = useState<"overview"|"timeline"|"team">("overview");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<EditFields | null>(null);
 
   useEffect(() => {
     if (!project) return;
     setTab("overview");
+    setEditing(false);
+    setDraft(null);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [project, onClose]);
 
   if (!project) return null;
-  const d = buildProjectDetail(project);
+  const base = buildProjectDetail(project);
+  const d: ProjectDetail = draft && editing
+    ? { ...base, clinic: draft.clinic, owner: draft.owner, dept: draft.dept, start: draft.start, target: draft.target, alos: draft.alos, objectives: draft.objectives }
+    : base;
   const ownerInitials = d.owner.split(" ").map(s => s[0]).slice(0,2).join("");
   const linkedIssues = issues.filter(i => i.clinic === d.clinic).slice(0, 4);
+
+  const startEdit = () => {
+    setDraft({ clinic: d.clinic, owner: d.owner, dept: d.dept, start: d.start, target: d.target, alos: d.alos, objectives: d.objectives });
+    setEditing(true);
+  };
+  const cancelEdit = () => { setEditing(false); setDraft(null); };
+  const saveEdit = () => { setEditing(false); toast.success("Project updated"); };
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60" onClick={onClose}>
       <div
         onClick={e => e.stopPropagation()}
         className="flex flex-col max-h-[90vh] w-full"
-        style={{ maxWidth: 680, background: "#161618", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
+        style={{ maxWidth: 680, background: "var(--wl-card)", border: "1px solid var(--wl-border)", borderRadius: 12 }}
       >
-        <div className="px-5 pt-5 pb-3 border-b border-[var(--wl-border)] shrink-0">
-          <div className="flex items-start gap-3">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-[20px] font-semibold text-[var(--wl-text)] tracking-tight">{d.name}</h2>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge tone={statusTone(d.status) as any}>{d.status}</Badge>
-                <Badge tone={riskTone(d.risk) as any}>{d.risk} Risk</Badge>
-                <span className="text-[12px] text-[var(--wl-text-2)]">Last updated {d.updated}</span>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="flex flex-col min-h-0 flex-1">
+          <div className="px-5 pt-5 pb-3 border-b border-[var(--wl-border)] shrink-0">
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-[20px] font-semibold text-[var(--wl-text)] tracking-tight">{d.name}</h2>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge tone={statusTone(d.status) as any}>{d.status}</Badge>
+                  <Badge tone={riskTone(d.risk) as any}>{d.risk} Risk</Badge>
+                  <span className="text-[12px] text-[var(--wl-text-2)]">Last updated {d.updated}</span>
+                </div>
               </div>
+              <button onClick={onClose} className="w-6 h-6 flex items-center justify-center text-[var(--wl-text-2)] hover:text-[var(--wl-text)]"><X size={14} /></button>
             </div>
-            <button onClick={onClose} className="w-6 h-6 flex items-center justify-center text-[var(--wl-text-2)] hover:text-[var(--wl-text)]"><X size={14} /></button>
+            <TabsList className={tabListCls}>
+              <TabsTrigger value="overview" className={tabTriggerCls}>Overview</TabsTrigger>
+              <TabsTrigger value="timeline" className={tabTriggerCls}>Timeline</TabsTrigger>
+              <TabsTrigger value="team" className={tabTriggerCls}>Team & Issues</TabsTrigger>
+            </TabsList>
           </div>
-          <div className="flex gap-1 mt-4">
-            {(["overview","timeline","team"] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} className={`px-3 h-8 text-xs rounded ${tab === t ? "bg-[var(--wl-blue)] text-white" : "text-[var(--wl-text-2)] hover:text-[var(--wl-text)] hover:bg-white/5"}`}>
-                {t === "overview" ? "Overview" : t === "timeline" ? "Timeline" : "Team & Issues"}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        <div className="flex-1 overflow-y-auto p-5">
-          {tab === "overview" && <Overview d={d} ownerInitials={ownerInitials} />}
-          {tab === "timeline" && <Timeline />}
-          {tab === "team" && <TeamIssues d={d} linkedIssues={linkedIssues} />}
-        </div>
+          <div className="flex-1 overflow-y-auto p-5">
+            <TabsContent value="overview">
+              <Overview d={d} ownerInitials={ownerInitials} editing={editing} draft={draft} setDraft={setDraft} />
+            </TabsContent>
+            <TabsContent value="timeline"><Timeline /></TabsContent>
+            <TabsContent value="team"><TeamIssues d={d} linkedIssues={linkedIssues} /></TabsContent>
+          </div>
+        </Tabs>
 
         <div className="px-5 py-3 border-t border-[var(--wl-border)] flex items-center justify-between shrink-0">
           <div className="text-[11px] text-[var(--wl-text-2)]">Created {d.start} · Last modified {d.updated}</div>
           <div className="flex gap-2">
-            <button className="text-xs px-3 py-1.5 border border-[var(--wl-border)] rounded text-[var(--wl-text)] hover:bg-white/5">Edit Project</button>
-            <button onClick={onClose} className="text-xs px-3 py-1.5 text-[var(--wl-text-2)] hover:text-[var(--wl-text)] rounded">Close</button>
+            {editing ? (
+              <>
+                <button onClick={cancelEdit} className="text-xs px-3 py-1.5 border border-[var(--wl-border)] rounded text-[var(--wl-text)] hover:bg-[var(--wl-surface)]">Cancel</button>
+                <button onClick={saveEdit} className="text-xs px-3 py-1.5 rounded bg-[var(--wl-blue)] text-white hover:opacity-90">Save Changes</button>
+              </>
+            ) : (
+              <>
+                <button onClick={startEdit} className="text-xs px-3 py-1.5 border border-[var(--wl-border)] rounded text-[var(--wl-text)] hover:bg-[var(--wl-surface)]">Edit Project</button>
+                <button onClick={onClose} className="text-xs px-3 py-1.5 text-[var(--wl-text-2)] hover:text-[var(--wl-text)] rounded">Close</button>
+              </>
+            )}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+const inputCls = "bg-[var(--wl-card)] border border-[var(--wl-border)] rounded px-2 py-1 text-[13px] text-[var(--wl-text)] outline-none focus:border-[var(--wl-blue)] w-full";
+
+function EditableRow({ label, value, editing, onChange }: { label: string; value: string; editing: boolean; onChange: (v: string) => void }) {
+  return (
+    <div className="flex justify-between items-center gap-3 py-1.5 text-[13px] border-b border-[var(--wl-border)] last:border-0">
+      <span className="text-[var(--wl-text-2)] shrink-0">{label}</span>
+      {editing
+        ? <input value={value} onChange={e => onChange(e.target.value)} className={`${inputCls} max-w-[60%] text-right`} />
+        : <span className="text-[var(--wl-text)] truncate">{value}</span>}
     </div>
   );
 }
@@ -187,27 +232,36 @@ function Row({ label, value, valueColor }: { label: string; value: React.ReactNo
   );
 }
 
-function Overview({ d, ownerInitials }: { d: ProjectDetail; ownerInitials: string }) {
+function Overview({ d, ownerInitials, editing, draft, setDraft }: { d: ProjectDetail; ownerInitials: string; editing: boolean; draft: EditFields | null; setDraft: (v: EditFields) => void }) {
   const alosColor = d.alos.startsWith("-") ? "var(--wl-green)" : d.alos === "0d" ? "var(--wl-text)" : "var(--wl-red)";
+  const upd = (patch: Partial<EditFields>) => draft && setDraft({ ...draft, ...patch });
   return (
     <div className="grid grid-cols-2 gap-5">
       <div className="space-y-5">
         <Section title="Project Details">
-          <Row label="Clinic" value={d.clinic} />
-          <Row label="Owner" value={
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-5 h-5 rounded-full bg-[var(--wl-blue)]/20 text-[var(--wl-blue)] flex items-center justify-center text-[10px] font-semibold">{ownerInitials}</span>
-              {d.owner}
-            </span>
-          } />
-          <Row label="Department" value={d.dept} />
-          <Row label="Start Date" value={d.start} />
-          <Row label="Target Completion" value={d.target} />
+          <EditableRow label="Clinic" value={d.clinic} editing={editing} onChange={v => upd({ clinic: v })} />
+          {editing ? (
+            <EditableRow label="Owner" value={d.owner} editing onChange={v => upd({ owner: v })} />
+          ) : (
+            <Row label="Owner" value={
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-[var(--wl-blue)]/20 text-[var(--wl-blue)] flex items-center justify-center text-[10px] font-semibold">{ownerInitials}</span>
+                {d.owner}
+              </span>
+            } />
+          )}
+          <EditableRow label="Department" value={d.dept} editing={editing} onChange={v => upd({ dept: v })} />
+          <EditableRow label="Start Date" value={d.start} editing={editing} onChange={v => upd({ start: v })} />
+          <EditableRow label="Target Completion" value={d.target} editing={editing} onChange={v => upd({ target: v })} />
           <Row label="Actual Cycle Time" value={d.cycle} />
-          <Row label="ALOS Impact" value={d.alos} valueColor={alosColor} />
+          {editing
+            ? <EditableRow label="ALOS Impact" value={d.alos} editing onChange={v => upd({ alos: v })} />
+            : <Row label="ALOS Impact" value={d.alos} valueColor={alosColor} />}
         </Section>
         <Section title="Objectives">
-          <p className="text-[13px] text-[var(--wl-text-2)] leading-relaxed">{d.objectives}</p>
+          {editing
+            ? <textarea value={d.objectives} onChange={e => upd({ objectives: e.target.value })} rows={4} className={inputCls} />
+            : <p className="text-[13px] text-[var(--wl-text-2)] leading-relaxed">{d.objectives}</p>}
         </Section>
       </div>
       <div className="space-y-5">

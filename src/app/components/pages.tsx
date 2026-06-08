@@ -10,6 +10,7 @@ import {
 } from "./data";
 import { StaffDrawer, StaffRow } from "./StaffDrawer";
 import { ProjectDetailModal } from "./ProjectDetailModal";
+import { Switch } from "./ui/switch";
 import {
   AlertTriangle, CheckCircle2, FileText, TrendingUp, TrendingDown, Send, Sparkles, ArrowRight,
   Search, MoreVertical, Plus, ArrowUp, ArrowDown, ArrowUpDown, ShieldCheck, Download, Share2,
@@ -775,6 +776,14 @@ export function ReportsPage({ role }: { role: Role }) {
 
   const exportPdf = () => { toast("Opening print dialog…"); setTimeout(() => window.print(), 50); };
 
+  const ReportPeriod = (
+    <div className="inline-flex">
+      {(["7D","1M","3M","6M","1Y","YTD"] as const).map(p => (
+        <button key={p} onClick={() => setPeriod(p)} className={`px-2 h-6 text-xs rounded ${period === p ? "bg-[var(--wl-blue)] text-white" : "text-[var(--wl-text-2)] hover:text-[var(--wl-text)]"}`}>{p}</button>
+      ))}
+    </div>
+  );
+
   return (
     <div>
       <PageHeading
@@ -795,11 +804,6 @@ export function ReportsPage({ role }: { role: Role }) {
                 </DM.Content>
               </DM.Portal>
             </DM.Root>
-            <div className="inline-flex border border-[var(--wl-border)] rounded overflow-hidden">
-              {(["7D","1M","3M","6M","1Y","YTD"] as const).map(p => (
-                <button key={p} onClick={() => setPeriod(p)} className={`px-2.5 h-7 text-xs ${period === p ? "bg-[var(--wl-blue)] text-white" : "text-[var(--wl-text-2)] hover:text-[var(--wl-text)]"}`}>{p}</button>
-              ))}
-            </div>
           </div>
         }
       />
@@ -870,7 +874,7 @@ export function ReportsPage({ role }: { role: Role }) {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <Card title="Avg Cycle Time (days)">
+          <Card title="Avg Cycle Time (days)" action={ReportPeriod}>
             <div style={{ width: "100%", height: 224 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cycleByPeriod[period]} margin={{ left: -20, right: 8, top: 8 }}>
@@ -883,7 +887,7 @@ export function ReportsPage({ role }: { role: Role }) {
               </ResponsiveContainer>
             </div>
           </Card>
-          <Card title="On-time Delivery %">
+          <Card title="On-time Delivery %" action={ReportPeriod}>
             <div style={{ width: "100%", height: 224 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={otdByPeriod[period]} margin={{ left: -20, right: 8, top: 8 }}>
@@ -1343,9 +1347,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   return (
     <div className="flex items-center justify-between py-3">
       <span className="text-sm text-[var(--wl-text)]">{label}</span>
-      <button onClick={() => onChange(!value)} className={`w-9 h-5 rounded-full relative transition-colors ${value ? "bg-[var(--wl-blue)]" : "bg-white/10"}`}>
-        <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${value ? "translate-x-4" : "translate-x-0.5"}`} />
-      </button>
+      <Switch checked={value} onCheckedChange={onChange} />
     </div>
   );
 }

@@ -96,8 +96,8 @@ export function Sidebar({ collapsed, onToggle, page, onNavigate, role }: Props) 
           <div className="w-7 h-7 mx-auto rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: `${roleColor}33`, color: roleColor }}>{initials}</div>
         ) : (
           <div
-            className="flex items-center gap-2 px-2 py-1.5 rounded border"
-            style={{ borderColor: `${roleColor}55`, background: `${roleColor}11` }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded"
+            style={{ border: "none", background: `${roleColor}11` }}
           >
             <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold" style={{ background: `${roleColor}33`, color: roleColor }}>{initials}</div>
             <div className="min-w-0 flex-1">
